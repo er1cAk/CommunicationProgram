@@ -1,14 +1,13 @@
 cmake_minimum_required( VERSION 3.10 )
 project( CommunicationServer )
 
+if(CMAKE_HOST_WIN32)
+    set(libname "libconfig")
+else()
+    set(libname "config")
+endif()
+
 set( CMAKE_CXX_STANDARD 14)
-
-set( MYSQL_CONNECTOR_DIR
-        /usr/local/opt/mysql-connector-c++ )
-
-FIND_PATH(CONFIG_INCLUDE_DIR libconfig.h /usr/include /usr/local/include)
-
-FIND_LIBRARY(CONFIG_LIBRARY NAMES config PATH /usr/lib /usr/local/lib)
 
 set( SOURCE_FILES
         main.cpp
@@ -38,6 +37,8 @@ link_directories(/usr/local/lib)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_link_libraries(${PROJECT_NAME} curl mysqlcppconn)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+
+target_link_libraries(${PROJECT_NAME} curl mysqlcppconn ${libname}++)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_range_for)

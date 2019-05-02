@@ -10,14 +10,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <cppconn/driver.h>
-#include <cppconn/exception.h>
 #include <cppconn/resultset.h>
+#include <cppconn/driver.h>
 #include <cppconn/statement.h>
+#include <cppconn/connection.h>
 #include <cppconn/prepared_statement.h>
+#include <libconfig.h++>
 
 using namespace std;
-
 
 class PowerPlant {
 private:
