@@ -12,7 +12,7 @@ AuroraPowerPlant::AuroraPowerPlant() = default;
 
 void AuroraPowerPlant::readInvertersData() {
     try {
-        _pstmt = _con->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? ORDER BY ADDRESS DESC");
+        _pstmt = _con->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();
@@ -20,15 +20,12 @@ void AuroraPowerPlant::readInvertersData() {
         _res->afterLast();
         while (_res->previous()) {
             int id = _res->getInt("INVERTER_ID");
-            uint8_t address = _res->getInt("ADDRESS");
+            int status_id = _res->getInt("STATUS_ID");
+            int address = _res->getInt("ADDRESS");
+            cout<<endl;
             try {
                 aurora.readState(address);
-                if (aurora.dataState.InverterState == 2) {
-
-                    cout << "Alarm state: " << aurora.dataState.AlarmState << endl;
-                    cout << "Inverter state: " << aurora.dataState.InverterState << endl;
-                    cout << "global state: " << aurora.dataState.GlobalState << endl;
-
+                if (aurora.dataState.InverterState == STATE_RUNNING) {
                     readGridVoltage(id, address);
                     readGridPower(id, address);
                     readGridCurrent(id, address);
@@ -36,9 +33,11 @@ void AuroraPowerPlant::readInvertersData() {
                     cout << "Inverter state is not running!" << endl;
                 }
             } catch (AuroraSendingRequestException &auroraSendingRequestException){
-                cout << auroraSendingRequestException.what()<<endl;
+                if(status_id != 4)
+                    updateStatus(id, "UPDATE INVERTER SET STATUS_ID=4 WHERE INVERTER_ID=?");
             }catch (AuroraReceivingResponseException &auroraReceivingResponseException){
-                cout << auroraReceivingResponseException.what()<<endl;
+                if(status_id != 4)
+                    updateStatus(id, "UPDATE INVERTER SET STATUS_ID=4 WHERE INVERTER_ID=?");
             }
         }
     } catch (sql::SQLException &e) {

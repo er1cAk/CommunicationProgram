@@ -14,6 +14,8 @@
 #define GRID_CURRENT 2
 #define GRID_POWER 3
 
+#define STATE_RUNNING 2
+
 #include "../power_plant/PowerPlant.h"
 #include "../aurorapp/Aurora.h"
 

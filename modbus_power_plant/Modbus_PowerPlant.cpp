@@ -44,7 +44,7 @@ void ModbusPowerPlant::readInvertorsData() {
                 readInstantPower(id, _res->getInt("DIVISOR"));
                 readDcVoltage(id);
                 readAcVoltage(id);
-                readCurrent(id);
+                readCurrent(id, _res->getInt("DIVISOR"));
             } catch (modbus_exception &e) {
                 cout << e.what() << endl;
             }
@@ -88,12 +88,12 @@ int ModbusPowerPlant::readAcVoltage(int invertor_id) {
         cout << e.what() << endl;
     }
 }
-int ModbusPowerPlant::readCurrent(int invertor_id) {
+int ModbusPowerPlant::readCurrent(int invertor_id, double divisor) {
     uint16_t buffer[1];
     try {
         modbus1.modbus_read_input_registers(CURRENT, COUNT_OF_READING_REGISTERS, buffer);
-        writeDataToDB(invertor_id, buffer[0], "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
-        cout << "CURRENT:  " << buffer[0] << endl;
+        writeDataToDB(invertor_id, ((double)(buffer[0]/divisor)), "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
+        cout << "CURRENT:  " << ((double)(buffer[0]/divisor)) << endl;
     } catch (modbus_exception &e){
         cout << e.what() << endl;
     }
