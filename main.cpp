@@ -49,8 +49,8 @@ int main() {
             sql::PreparedStatement *pstmt;
 
             driver = get_driver_instance();
-            con = driver->connect(db_url, "monitoringServer", "enprotech");
-            con->setSchema("monitoring");
+            con = driver->connect(db_url, db_user, db_pass);
+            con->setSchema(db_name);
 
             pstmt = con->prepareStatement("SELECT * FROM POWER_PLANTS WHERE STATUS_ID != 3 ORDER BY PW_ID DESC");
             res = pstmt->executeQuery();
