@@ -30,7 +30,7 @@ void AuroraPowerPlant::readInvertersData() {
                     readGridPower(id, address);
                     readGridCurrent(id, address);
                 }else{
-                    cout << "Inverter state is not running!" << endl;
+                    cout << "Inverter state is not running!" << aurora.dataState.GlobalState << endl;
                 }
             } catch (AuroraSendingRequestException &auroraSendingRequestException){
                 if(status_id != 4)

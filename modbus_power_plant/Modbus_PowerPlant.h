@@ -39,7 +39,7 @@ public:
 
     ModbusPowerPlant(string _ip_address, int id);
     ModbusPowerPlant();
-    void connect();
+    bool connect();
     void disconnect();
     void readInvertorsData();
 };

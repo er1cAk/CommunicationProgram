@@ -10,12 +10,8 @@ ModbusPowerPlant::ModbusPowerPlant(string ip_address, int id): PowerPlant(ip_add
 ModbusPowerPlant::ModbusPowerPlant() = default;
 
 
-void ModbusPowerPlant::connect() {
-    try {
-        modbus1.modbus_connect();
-    } catch (modbus_exception &e){
-        cout<< e.what() <<endl;
-    }
+bool ModbusPowerPlant::connect() {
+    return modbus1.modbus_connect();
 }
 
 void ModbusPowerPlant::disconnect() {
@@ -39,7 +35,6 @@ void ModbusPowerPlant::readInvertorsData() {
             cout << "RESULT PW_ID( " << this -> get_id() << " ), ADDRESS: " << _res -> getString("ADDRESS") << endl;
             try {
                 modbus1.modbus_set_slave_id(_res->getInt("ADDRESS"));
-                modbus1.resetTimeOut();
                 int id = _res->getInt("INVERTER_ID");
                 readInstantPower(id, _res->getInt("DIVISOR"));
                 readDcVoltage(id);
@@ -60,7 +55,6 @@ ssize_t ModbusPowerPlant::readInstantPower(int invertor_id, double divisor) {
         modbus1.modbus_read_input_registers(INSTANT_POWER, COUNT_OF_READING_REGISTERS, buffer);
         double power = (buffer[0] / divisor) * 1000;
         writeDataToDB(invertor_id, power, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
-        cout << "Power: " << power << endl;
     } catch (modbus_exception &e){
         cout << e.what() << endl;
         return -1;

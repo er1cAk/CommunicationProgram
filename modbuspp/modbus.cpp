@@ -217,7 +217,7 @@ void modbus::modbus_read_input_registers(int address, int amount, uint16_t *buff
         }
         modbus_read(address, amount, READ_INPUT_REGS);
         uint8_t to_rec[MAX_MSG_LENGTH];
-        ssize_t k = modbus_receive(to_rec);
+        int k = modbus_receive(to_rec);
         try {
             modbus_error_handle(to_rec, READ_INPUT_REGS);
             for (int i = 0; i < amount; i++) {
