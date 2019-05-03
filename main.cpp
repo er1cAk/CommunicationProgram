@@ -69,6 +69,7 @@ int main() {
                         auroraPowerPlant.connect();
                         auroraPowerPlant.readInvertersData();
                         auroraPowerPlant.disconnect();
+                        break;
                     default:
                         cout << "Bad protocol" << endl;
                         break;
