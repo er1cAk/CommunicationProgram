@@ -7,6 +7,7 @@
 
 PowerPlant::PowerPlant(string ip_address, int id) {
     libconfig::Config cfg;
+    _connectivity = true;
 
     try{
         cfg.readFile("../config.cfg");
@@ -58,6 +59,16 @@ void PowerPlant::writeDataToDB(int invertor_id, double value, string query){
         _pstmt = _con->prepareStatement(query);
         _pstmt->setInt(1, invertor_id);
         _pstmt->setDouble(2, value);
+        _pstmt->executeQuery();
+    } catch (sql::SQLException &e) {
+        cout << e.what() << endl;
+    }
+}
+
+void PowerPlant::updateStatus(int invertor_id, string query){
+    try {
+        _pstmt = _con->prepareStatement(query);
+        _pstmt->setInt(1, invertor_id);
         _pstmt->executeQuery();
     } catch (sql::SQLException &e) {
         cout << e.what() << endl;

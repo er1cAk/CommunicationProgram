@@ -133,7 +133,6 @@ void Aurora::aurora_read_state(uint8_t address) {
             uint8_t response[RESPONSE_SIZE];
 
             if (receiveResponse(response) == 1) {
-                cout << "Read_STATE: " << endl;
                 printit(response);
             }else{
                 throw AuroraReceivingResponseException();

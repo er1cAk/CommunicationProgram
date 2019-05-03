@@ -32,10 +32,12 @@ protected:
     sql::Statement *_stmt;
     sql::ResultSet *_res;
     sql::PreparedStatement *_pstmt;
+    bool _connectivity;
 
     void set_ip_address(const string &_ip_address);
     void set_id(int _id);
     void writeDataToDB(int invertor_id, double value, string query);
+    void updateStatus(int invertor_id, string query);
 
 public:
     PowerPlant(string _ip_address, int id);

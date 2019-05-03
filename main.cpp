@@ -84,7 +84,7 @@ int main() {
             cout << ", SQLState: " << e.getSQLState() << " )" << endl;
         }
     } catch (const SettingNotFoundException &nfex){
-        cerr << "No 'name' setting in configuration file." << endl;
+        cerr << "DB_USER or DB_PASS or DB_NAME or DB_URL was not found in config.cfg" << endl;
     }
 }
 void onlyForQuickChanges(sql::Connection *conn) {
