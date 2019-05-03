@@ -28,21 +28,11 @@ private:
 
     void clearInverterData();
 
-    typedef struct{
-        float gridVoltageValue;
-        float gridCurrentValue;
-        float gridPowerValue;
-    }InverterData;
-
-    typedef struct {
-
-    }LastFourAlarms;
-
 public:
     AuroraPowerPlant(string _ip_address, int id);
     AuroraPowerPlant();
     void readInvertersData();
-    void connect();
+    bool connect();
     void disconnect();
 };
 

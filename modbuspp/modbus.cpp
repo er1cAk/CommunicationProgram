@@ -441,26 +441,27 @@ ssize_t modbus::modbus_send(uint8_t *to_send, int length) {
  * @return       Size of Incoming Data
  */
 ssize_t modbus::modbus_receive(uint8_t *buffer) {
-    if(_timeout){
-        return 0;
-    }else {
-        timeval tv;
-        tv.tv_sec = 2;
+    int result;
+    timeval tv;
+    tv.tv_sec = 2;
 
-        fd_set rfds;
-        FD_ZERO(&rfds);
-        FD_SET(_socket, &rfds);
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(_socket, &rfds);
 
-//        int ready = select(_socket + 1, &rfds, NULL, NULL, &tv);
-//
-//        if(ready == 0){
-//            cout << "Time out"<< endl;
-//            return 0;
-//        }else if( ready == -1){
-//            cout << "Error" << endl;
-//        }else{
-            return recv(_socket, (char *) buffer, 1024, 0);
-//        }
+    result = select(_socket + 1, &rfds, NULL, NULL, &tv);
+
+    if (result == -1) {
+        //error of select
+        return -1;
+    } else if (result) {
+        //data should be readble
+        if (FD_ISSET(_socket, &rfds)) {
+            return read(_socket, buffer, 256);
+        }
+    } else {
+        //timeout
+        return -2;
     }
 }
 

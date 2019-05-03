@@ -21,9 +21,25 @@ void AuroraPowerPlant::readInvertersData() {
         while (_res->previous()) {
             int id = _res->getInt("INVERTER_ID");
             uint8_t address = _res->getInt("ADDRESS");
-            readGridVoltage(id, address);
-            readGridPower(id, address);
-            readGridCurrent(id, address);
+            try {
+                aurora.readState(address);
+                if (aurora.dataState.InverterState == 2) {
+
+                    cout << "Alarm state: " << aurora.dataState.AlarmState << endl;
+                    cout << "Inverter state: " << aurora.dataState.InverterState << endl;
+                    cout << "global state: " << aurora.dataState.GlobalState << endl;
+
+                    readGridVoltage(id, address);
+                    readGridPower(id, address);
+                    readGridCurrent(id, address);
+                }else{
+                    cout << "Inverter state is not running!" << endl;
+                }
+            } catch (AuroraSendingRequestException &auroraSendingRequestException){
+                cout << auroraSendingRequestException.what()<<endl;
+            }catch (AuroraReceivingResponseException &auroraReceivingResponseException){
+                cout << auroraReceivingResponseException.what()<<endl;
+            }
         }
     } catch (sql::SQLException &e) {
         cout << e.what() << endl;
@@ -31,36 +47,17 @@ void AuroraPowerPlant::readInvertersData() {
 }
 
 void AuroraPowerPlant::readGridVoltage(int id, uint8_t address) {
-    try{
-        if(_connectivity){
-            aurora.readDSP(address, GRID_VOLTAGE, GLOBAL_TYPE_GLOBAL);
-
-            if(aurora.dataDsp.TransmissionState == 0){
-                writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE) VALUES(?,?)");
-                cout<< "Voltage:" << aurora.dataDsp.Value << endl;
-                clearInverterData();
-            }
-        }
-    } catch (AuroraConnectException &ace){
-        if(_connectivity){
-            updateStatus(id, "UPDATE INVERTERS SET STATUS_ID=4 WHERE INVERTER_ID=?");
-            _connectivity = false;
-        }
-    } catch (AuroraSendingRequestException &asre){
-        if(_connectivity){
-            updateStatus(id, "UPDATE INVERTERS SET STATUS_ID=4 WHERE INVERTER_ID=?");
-            _connectivity = false;
-        }
-    } catch (AuroraReceivingResponseException &arre){
-        if(_connectivity){
-            updateStatus(id, "UPDATE INVERTERS SET STATUS_ID=4 WHERE INVERTER_ID=?");
-            _connectivity = false;
+    if(_connectivity){
+        aurora.readDSP(address, GRID_VOLTAGE, GLOBAL_TYPE_GLOBAL);
+        if(aurora.dataDsp.TransmissionState == 0){
+            writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE) VALUES(?,?)");
+            cout<< "Voltage:" << aurora.dataDsp.Value << endl;
+            clearInverterData();
         }
     }
 }
 
 void AuroraPowerPlant::readGridCurrent(int id, uint8_t address) {
-    try{
         if(_connectivity){
             aurora.readDSP(address, GRID_CURRENT, GLOBAL_TYPE_GLOBAL);
             if(aurora.dataDsp.TransmissionState == 0){
@@ -69,31 +66,16 @@ void AuroraPowerPlant::readGridCurrent(int id, uint8_t address) {
                 clearInverterData();
             }
         }
-    } catch (AuroraConnectException &ace){
-        cout << ace.what() << endl;
-    } catch (AuroraSendingRequestException &asre){
-        cout << asre.what() << endl;
-    } catch (AuroraReceivingResponseException &arre){
-        cout << arre.what() << endl;
-    }
 }
 
 void AuroraPowerPlant::readGridPower(int id, uint8_t address) {
-    try {
-        if(_connectivity){
-            aurora.readDSP(address, GRID_POWER, GLOBAL_TYPE_GLOBAL );
-            if(aurora.dataDsp.TransmissionState == 0){
-                writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO POWER(INVERTER_ID, VALUE) VALUES(?,?)");
-                cout<< "Power:" << aurora.dataDsp.Value << endl;
-                clearInverterData();
-            }
+    if(_connectivity){
+        aurora.readDSP(address, GRID_POWER, GLOBAL_TYPE_GLOBAL );
+        if(aurora.dataDsp.TransmissionState == 0){
+            writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO POWER(INVERTER_ID, VALUE) VALUES(?,?)");
+            cout<< "Power:" << aurora.dataDsp.Value << endl;
+            clearInverterData();
         }
-    } catch (AuroraConnectException &ace){
-        cout << ace.what() << endl;
-    } catch (AuroraSendingRequestException &asre){
-        cout << asre.what() << endl;
-    } catch (AuroraReceivingResponseException &arre){
-        cout << arre.what() << endl;
     }
 }
 
@@ -106,8 +88,13 @@ void AuroraPowerPlant::clearInverterData() {
     aurora.dataDsp = {};
 }
 
-void AuroraPowerPlant::connect() {
-    aurora.aurora_connect();
+bool AuroraPowerPlant::connect() {
+    try {
+        aurora.aurora_connect();
+    } catch (AuroraConnectException &auroraConnectException){
+        return false;
+    }
+    return true;
 }
 
 void AuroraPowerPlant::disconnect() {

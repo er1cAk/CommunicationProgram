@@ -40,7 +40,7 @@ void Aurora::aurora_connect() {
     _server.sin_port = htons(PORT);
 
     if (connect(_socket, (struct sockaddr*)&_server, sizeof(_server)) < 0) {
-        cout<< "Connection Error" << endl;
+        throw AuroraConnectException();
     } else {
         _connected = true;
     }
@@ -67,10 +67,10 @@ void Aurora::aurora_build_request(uint8_t *message, uint8_t address, uint8_t com
     message[1] = command;
     message[2] = type;
     message[3] = global;
-    message[4] = 32;
-    message[5] = 32;
-    message[6] = 32;
-    message[7] = 32;
+    message[4] = 0;
+    message[5] = 0;
+    message[6] = 0;
+    message[7] = 0;
 
     //getting CRC_16
     uint16_t  crc_16 = crc16(message, 8);
@@ -98,50 +98,45 @@ uint16_t Aurora::crc16(uint8_t *message, size_t length){
 }
 
 ssize_t Aurora::receiveResponse(uint8_t *buffer){
-    timeval tv;
-    tv.tv_sec = 2;
-
     fd_set rfds;
+    struct timeval tv;
+    int result;
+
     FD_ZERO(&rfds);
     FD_SET(_socket, &rfds);
 
-    int ready = select(_socket + 1, &rfds, NULL, NULL, &tv);
 
-    switch (ready) {
-        case 0:
-            _timeout = true;
-            cout << "Time out" << endl;
-            return 0;
-//            THIS DOESNT WORK PROPERLY
-//      case -1:
-//            cout << "Error" << endl;
-//            return 0;
-        default:
-            return recv(_socket, (char *) buffer, 1024, 0);
-//            if(recv(_socket, (char *) buffer, 1024, 0) > 0){
-//                uint16_t waitedCrc =  ((uint16_t ) buffer[7] << 8) | (uint16_t )buffer[6];
-//                cout << "waited CRC: " << waitedCrc << endl;
-//                if( waitedCrc == crc16(buffer, 7))
-//                    return 1;
-//            }
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    result = select(_socket + 1, &rfds, NULL, NULL, &tv);
+
+    if (result == -1){
+        return -1;
+    }else if (result){
+        if(FD_ISSET(_socket, &rfds)){
+            return read(_socket, buffer, 256);
+        }
+    }else{
+        return -2;
     }
 }
 
-void Aurora::aurora_read_state(uint8_t address) {
+void Aurora::readState(uint8_t address) {
     if(_connected) {
         if (sendRequest(address, READ_STATE, 0, 0) > -1) {
             uint8_t response[RESPONSE_SIZE];
-
-            if (receiveResponse(response) == 1) {
-                printit(response);
+            if (receiveResponse(response) > -1) {
+                dataState.TransmissionState = response[0];
+                dataState.GlobalState = response[1];
+                dataState.InverterState = response[2];
+                dataState.AlarmState = response[5];
             }else{
                 throw AuroraReceivingResponseException();
             }
         }else{
             throw AuroraSendingRequestException();
         }
-    } else {
-        throw AuroraConnectException();
     }
 }
 
@@ -157,8 +152,6 @@ void Aurora::readDSP(uint8_t address, uint8_t type, uint8_t global) {
         }else{
             throw AuroraSendingRequestException();
         }
-    }else{
-        throw AuroraConnectException();
     }
 }
 

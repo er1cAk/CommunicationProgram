@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "AuroraException.h"
+#include <fcntl.h>
 
 #define POLY 0x8408
 
@@ -27,8 +28,6 @@ private:
     bool _connected;
     bool _timeout;
     int _socket;
-    uint8_t _address;
-    int _msg;
     int PORT;
     string HOST;
     struct sockaddr_in _server;
@@ -38,10 +37,6 @@ private:
         float asFloat;
     } toFloat;
 
-    typedef struct {
-        uint8_t TransmissionState;
-        uint8_t GlobalState;
-    }state;
 private:
 
     void aurora_build_request(uint8_t *message, uint8_t address, uint8_t command, uint8_t type, uint8_t global);
@@ -52,13 +47,21 @@ private:
 
 public:
     typedef struct {
-        uint8_t TransmissionState;
-        uint8_t GlobalState;
+        int TransmissionState;
+        int GlobalState;
         float Value;
         bool ReadState;
     }DataDSP;
 
+    typedef  struct {
+        int  TransmissionState;
+        int GlobalState;
+        int InverterState;
+        int AlarmState;
+    }DataState;
+
     DataDSP dataDsp;
+    DataState dataState;
 
     Aurora(string HOST, int PORT);
 
@@ -68,7 +71,7 @@ public:
 
     void aurora_connect();
     void aurora_disconnect();
-    void aurora_read_state(uint8_t address);
+    void readState(uint8_t address);
     void readDSP(uint8_t address, uint8_t type, uint8_t global);
 
 };

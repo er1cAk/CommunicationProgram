@@ -40,7 +40,6 @@ int main() {
         string db_url = cfg.lookup("DB_URL");
         string db_pass = cfg.lookup("DB_PASS");
         string db_user = cfg.lookup("DB_USER");
-
         try {
             sql::Driver *driver;
             sql::Connection *con;
@@ -65,10 +64,15 @@ int main() {
                         modbusPowerPlant.disconnect();
                         break;
                     case 2:
+
                         auroraPowerPlant = AuroraPowerPlant(res->getString("IP_ADDRESS"), res->getInt("PW_ID"));
-                        auroraPowerPlant.connect();
-                        auroraPowerPlant.readInvertersData();
-                        auroraPowerPlant.disconnect();
+
+                        if(auroraPowerPlant.connect()){
+                            auroraPowerPlant.readInvertersData();
+                            auroraPowerPlant.disconnect();
+                        }else{
+                            auroraPowerPlant.disconnect();
+                        }
                         break;
                     default:
                         cout << "Bad protocol" << endl;
