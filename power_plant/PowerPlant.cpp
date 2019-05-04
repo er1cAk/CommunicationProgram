@@ -26,8 +26,8 @@ PowerPlant::PowerPlant(string ip_address, int id) {
         _ip_address = ip_address;
         _id = id;
         _driver = get_driver_instance();
-        _con = _driver->connect(db_url, db_user, db_pass);
-        _con->setSchema(db_name);
+        _conn = _driver->connect(db_url, db_user, db_pass);
+        _conn->setSchema(db_name);
     } catch (const libconfig::SettingNotFoundException &nfex){
         cerr << "No 'name' setting in configuration file." << endl;
     }
@@ -56,7 +56,7 @@ void PowerPlant::set_id(int _id) {
 
 void PowerPlant::writeDataToDB(int invertor_id, double value, string query){
     try {
-        _pstmt = _con->prepareStatement(query);
+        _pstmt = _conn->prepareStatement(query);
         _pstmt->setInt(1, invertor_id);
         _pstmt->setDouble(2, value);
         _pstmt->executeQuery();
@@ -65,10 +65,21 @@ void PowerPlant::writeDataToDB(int invertor_id, double value, string query){
     }
 }
 
-void PowerPlant::updateStatus(int invertor_id, string query){
+void PowerPlant::updateInverterStatus(int invertor_id, string query){
     try {
-        _pstmt = _con->prepareStatement(query);
+        _pstmt = _conn->prepareStatement(query);
         _pstmt->setInt(1, invertor_id);
+        _pstmt->executeQuery();
+    } catch (sql::SQLException &e) {
+        cout << e.what() << endl;
+    }
+}
+
+void PowerPlant::updatePowerPlantStatus(int status){
+    try {
+        _pstmt = _conn->prepareStatement("UPDATE POWER_PLANTS SET STATUS_ID = ? WHERE PW_ID = ?");
+        _pstmt->setInt(1,status);
+        _pstmt->setInt(2,this->get_id());
         _pstmt->executeQuery();
     } catch (sql::SQLException &e) {
         cout << e.what() << endl;

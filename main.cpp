@@ -9,16 +9,15 @@
 #include <cppconn/prepared_statement.h>
 #include <curl/curl.h>
 
-#include "modbuspp/modbus.h"
-#include "modbuspp/modbus_exception.h"
 #include "modbus_power_plant/Modbus_PowerPlant.h"
-#include "aurorapp/Aurora.h"
 #include "aurora_power_plant/AuroraPowerPlant.h"
+#include "constants.h"
 
 using namespace std;
 using namespace libconfig;
 
 void onlyForQuickChanges(sql::Connection *conn);
+//void updatePowerPlantStatus( sql::Connection *conn, int id, int status);
 
 int main() {
     ModbusPowerPlant modbusPowerPlant;
@@ -30,10 +29,10 @@ int main() {
     try{
         cfg.readFile("../config.cfg");
     }catch(const FileIOException &fioex){
-        std::cerr << "I/O error while reading file." << std::endl;
+        cerr << "I/O error while reading file." << std::endl;
         return(EXIT_FAILURE);
     }catch(const ParseException &pex){
-        std::cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
+        cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
                   << " - " << pex.getError() << std::endl;
         return(EXIT_FAILURE);
     }
@@ -43,58 +42,72 @@ int main() {
         string db_url = cfg.lookup("DB_URL");
         string db_pass = cfg.lookup("DB_PASS");
         string db_user = cfg.lookup("DB_USER");
-//        try {
-//            sql::Driver *driver;
-//            sql::Connection *con;
-//            sql::Statement *stmt;
-//            sql::ResultSet *res;
-//            sql::PreparedStatement *pstmt;
-//
-//            driver = get_driver_instance();
-//            con = driver->connect(db_url, db_user, db_pass);
-//            con->setSchema(db_name);
-////            onlyForQuickChanges(con);
-//
-//            pstmt = con->prepareStatement("SELECT * FROM POWER_PLANTS WHERE STATUS_ID != 3 ORDER BY PW_ID DESC");
-//            res = pstmt->executeQuery();
-//
-//            res->afterLast();
-//            while (res->previous()) {
-//                switch(res->getInt("PROTOCOL_ID")){
-//                    case 1:
-//                        modbusPowerPlant = ModbusPowerPlant(res->getString("IP_ADDRESS"), res->getInt("PW_ID"));
-//                        if(modbusPowerPlant.connect()) {
-//                            modbusPowerPlant.readInvertorsData();
-//                            modbusPowerPlant.disconnect();
-//                        } else{
-//                            modbusPowerPlant.disconnect();
-//                        }
-//                        break;
-//                    case 2:
-//
-//                        auroraPowerPlant = AuroraPowerPlant(res->getString("IP_ADDRESS"), res->getInt("PW_ID"));
-//
-//                        if(auroraPowerPlant.connect()){
-//                            auroraPowerPlant.readInvertersData();
-//                            auroraPowerPlant.disconnect();
-//                        }else{
-//                            auroraPowerPlant.disconnect();
-//                        }
-//                        break;
-//                    default:
-//                        cout << "Bad protocol" << endl;
-//                        break;
-//                }
-//            }
-//            delete(con);
-//        } catch (sql::SQLException &e){
-//            cout << "# ERR: SQLException in " << __FILE__;
-//            cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
-//            cout << "# ERR: " << e.what();
-//            cout << " (MySQL error code: " << e.getErrorCode();
-//            cout << ", SQLState: " << e.getSQLState() << " )" << endl;
-//        }
+        try {
+            sql::Driver *driver;
+            sql::Connection *con;
+            sql::Statement *stmt;
+            sql::ResultSet *res;
+            sql::PreparedStatement *pstmt;
 
+            driver = get_driver_instance();
+            con = driver->connect(db_url, db_user, db_pass);
+            con->setSchema(db_name);
+//            onlyForQuickChanges(con);
+
+            pstmt = con->prepareStatement("SELECT * FROM POWER_PLANTS WHERE STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY PW_ID DESC");
+            res = pstmt->executeQuery();
+
+            res->afterLast();
+
+            while (res->previous()) {
+
+                string IP_ADDRESS = res->getString("IP_ADDRESS");
+                int PW_ID = res->getInt("PW_ID");
+                int STATUS_ID = res->getInt("STATUS_ID");
+
+                switch(res->getInt("PROTOCOL_ID")){
+                    case 1:
+                        modbusPowerPlant = ModbusPowerPlant(IP_ADDRESS, PW_ID);
+
+                        if(modbusPowerPlant.connect()) {
+                            if(STATUS_ID != STATUS_ONLINE)
+                                modbusPowerPlant.updatePowerPlantStatus(STATUS_ONLINE);
+                            modbusPowerPlant.readInvertorsData();
+                            modbusPowerPlant.disconnect();
+                        } else {
+                            if(STATUS_ID != STATUS_COMMUNICATION_ERROR)
+                                modbusPowerPlant.updatePowerPlantStatus(STATUS_COMMUNICATION_ERROR);
+                            modbusPowerPlant.disconnect();
+                        }
+                        break;
+
+                    case 2:
+                        auroraPowerPlant = AuroraPowerPlant(IP_ADDRESS, PW_ID);
+
+                        if(auroraPowerPlant.connect()){
+                            if(STATUS_ID != STATUS_ONLINE)
+                                auroraPowerPlant.updatePowerPlantStatus(STATUS_ONLINE);
+                            auroraPowerPlant.readInvertersData();
+                            auroraPowerPlant.disconnect();
+                        } else {
+                            if(STATUS_ID != STATUS_COMMUNICATION_ERROR)
+                                auroraPowerPlant.updatePowerPlantStatus(STATUS_COMMUNICATION_ERROR);
+                            auroraPowerPlant.disconnect();
+                        }
+                        break;
+                    default:
+                        cout << "Bad protocol" << endl;
+                        break;
+                }
+            }
+            delete(con);
+        } catch (sql::SQLException &e){
+            cout << "# ERR: SQLException in " << __FILE__;
+            cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
+            cout << "# ERR: " << e.what();
+            cout << " (MySQL error code: " << e.getErrorCode();
+            cout << ", SQLState: " << e.getSQLState() << " )" << endl;
+        }
         //TICK, http post request
         curl = curl_easy_init();
         if(curl) {
@@ -133,3 +146,12 @@ void onlyForQuickChanges(sql::Connection *conn) {
         ps->executeQuery();
     }
 }
+
+//void updatePowerPlantStatus( sql::Connection *conn, int id, int status){
+//    sql::PreparedStatement *ps;
+//
+//    ps = conn->prepareStatement("UPDATE POWER_PLANTS SET STATUS_ID = ? WHERE PW_ID = ?");
+//    ps->setInt(1,status);
+//    ps->setInt(2,id);
+//    ps->executeQuery();
+//}

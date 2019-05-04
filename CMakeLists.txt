@@ -28,7 +28,7 @@ set( SOURCE_FILES
 
         aurora_power_plant/AuroraPowerPlant.cpp
         aurora_power_plant/AuroraPowerPlant.h
-)
+        constants.h)
 
 
 include_directories(/usr/local/include)

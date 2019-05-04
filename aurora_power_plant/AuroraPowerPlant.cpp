@@ -12,7 +12,7 @@ AuroraPowerPlant::AuroraPowerPlant() = default;
 
 void AuroraPowerPlant::readInvertersData() {
     try {
-        _pstmt = _con->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 ORDER BY ADDRESS DESC");
+        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();
@@ -32,12 +32,10 @@ void AuroraPowerPlant::readInvertersData() {
                 }else{
                     cout << "Inverter state is not running!" << aurora.dataState.GlobalState << endl;
                 }
-            } catch (AuroraSendingRequestException &auroraSendingRequestException){
+            } catch (exception &e){
                 if(status_id != 4)
-                    updateStatus(id, "UPDATE INVERTER SET STATUS_ID=4 WHERE INVERTER_ID=?");
-            }catch (AuroraReceivingResponseException &auroraReceivingResponseException){
-                if(status_id != 4)
-                    updateStatus(id, "UPDATE INVERTER SET STATUS_ID=4 WHERE INVERTER_ID=?");
+                    updateInverterStatus(id, "UPDATE INVERTER SET STATUS_ID=4 WHERE INVERTER_ID=?");
+                cout << e.what() << endl;
             }
         }
     } catch (sql::SQLException &e) {
@@ -88,12 +86,7 @@ void AuroraPowerPlant::clearInverterData() {
 }
 
 bool AuroraPowerPlant::connect() {
-    try {
-        aurora.aurora_connect();
-    } catch (AuroraConnectException &auroraConnectException){
-        return false;
-    }
-    return true;
+    return aurora.aurora_connect();
 }
 
 void AuroraPowerPlant::disconnect() {

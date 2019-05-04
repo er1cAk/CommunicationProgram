@@ -24,7 +24,7 @@ void ModbusPowerPlant::disconnect() {
 
 void ModbusPowerPlant::readInvertorsData() {
     try {
-        _pstmt = _con->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? ORDER BY ADDRESS DESC");
+        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? WHERE STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();

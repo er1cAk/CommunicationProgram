@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
+
 #include "modbus_exception.h"
 using namespace std;
 
@@ -92,7 +94,6 @@ public:
     void modbus_write_coils(int address, int amount, bool* value );
     void modbus_write_registers(int address, int amount, uint16_t *value);
 
-    void resetTimeOut();
 };
 
 

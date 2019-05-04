@@ -28,7 +28,7 @@ private:
 
 protected:
 
-    sql::Connection *_con;
+    sql::Connection *_conn;
     sql::Statement *_stmt;
     sql::ResultSet *_res;
     sql::PreparedStatement *_pstmt;
@@ -37,15 +37,16 @@ protected:
     void set_ip_address(const string &_ip_address);
     void set_id(int _id);
     void writeDataToDB(int invertor_id, double value, string query);
-    void updateStatus(int invertor_id, string query);
+    void updateInverterStatus(int invertor_id, string query);
 
 public:
     PowerPlant(string _ip_address, int id);
     PowerPlant();
     ~PowerPlant();
 
-    std::string get_ip_address();
+    string get_ip_address();
     int get_id();
+    void updatePowerPlantStatus(int status);
 
 };
 

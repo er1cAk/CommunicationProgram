@@ -55,30 +55,60 @@ void modbus::modbus_set_slave_id(int id) {
  */
 bool modbus::modbus_connect() {
     if(HOST == "" || PORT == 0) {
-        std::cout << "Missing Host and Port" << std::endl;
+        //maybe i should log it
         return false;
-    } else {
-        std::cout << "Found Proper Host "<< HOST << " and Port " <<PORT <<std::endl;
     }
 
     _socket = socket(AF_INET, SOCK_STREAM, 0);
-    if(_socket == -1) {
-        std::cout <<"Error Opening Socket" <<std::endl;
+
+    if(_socket < 0) {
         return false;
-    } else {
-        std::cout <<"Socket Opened Successfully" << std::endl;
     }
 
     _server.sin_family = AF_INET;
     _server.sin_addr.s_addr = inet_addr(HOST.c_str());
     _server.sin_port = htons(PORT);
 
-    if (connect(_socket, (struct sockaddr*)&_server, sizeof(_server)) < 0) {
-        std::cout<< "Connection Error" << std::endl;
-        return false;
-    }
+    long arg;
+    struct timeval tv;
+    int res, valopt;
+    fd_set myset;
+    socklen_t lon;
 
-    std::cout<< "Connected" <<std::endl;
+    // Set non-blocking
+    arg = fcntl(_socket, F_GETFL, NULL);
+    arg |= O_NONBLOCK;
+    fcntl(_socket, F_SETFL, arg);
+
+    res = connect(_socket, (struct sockaddr*)&_server, sizeof(_server));
+    //"solution" connect with timeout
+    if (res < 0) {
+        if (errno == EINPROGRESS) {
+            tv.tv_sec = 2;
+            tv.tv_usec = 0;
+            FD_ZERO(&myset);
+            FD_SET(_socket, &myset);
+            if (select(_socket+1, NULL, &myset, NULL, &tv) > 0) {
+                lon = sizeof(int);
+                getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
+                if (valopt) {
+                    fprintf(stderr, "Error in connection() %d - %s\n", valopt, strerror(valopt));
+                    return false;
+                }
+            }else {
+                fprintf(stderr, "Timeout or error() %d - %s\n", valopt, strerror(valopt));
+                return false;
+            }
+        } else {
+            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+            return false;
+        }
+    }
+    // Set to blocking mode again...
+    arg = fcntl(_socket, F_GETFL, NULL);
+    arg &= (~O_NONBLOCK);
+    fcntl(_socket, F_SETFL, arg);
+
     _connected = true;
     return true;
 }
@@ -89,7 +119,6 @@ bool modbus::modbus_connect() {
  */
 void modbus::modbus_close() {
     close(_socket);
-    std::cout <<"Socket Closed" <<std::endl;
 }
 
 
@@ -192,7 +221,6 @@ void modbus::modbus_read_holding_registers(int address, int amount, uint16_t *bu
                 buffer[i] += (uint16_t) to_rec[10 + 2 * i];
             }
         } catch (exception &e) {
-            cout<<e.what()<<endl;
             delete(&to_rec);
             delete(&k);
             throw e;
@@ -229,7 +257,6 @@ void modbus::modbus_read_input_registers(int address, int amount, uint16_t *buff
                 }
             }
         } catch (exception &e) {
-            cout<<e.what()<<endl;
             delete(&to_rec);
             delete(&k);
             throw e;
@@ -261,7 +288,6 @@ void modbus::modbus_read_coils(int address, int amount, bool *buffer) {
                 buffer[i] = (bool) ((to_rec[9 + i / 8] >> (i % 8)) & 1);
             }
         } catch (exception &e) {
-            cout<<e.what()<<endl;
             delete(&to_rec);
             delete(&k);
             throw e;
@@ -293,7 +319,6 @@ void modbus::modbus_read_input_bits(int address, int amount, bool* buffer) {
                 buffer[i] = (bool) ((to_rec[9 + i / 8] >> (i % 8)) & 1);
             }
         } catch (exception &e) {
-            cout<<e.what()<<endl;
             delete(&to_rec);
             delete(&k);
             throw e;
@@ -322,7 +347,6 @@ void modbus::modbus_write_coil(int address, bool to_write) {
         try{
             modbus_error_handle(to_rec, WRITE_COIL);
         } catch (exception &e) {
-            cout<<e.what()<<endl;
             delete(&to_rec);
             delete(&k);
             throw e;
@@ -350,7 +374,6 @@ void modbus::modbus_write_register(int address, uint16_t value) {
         try{
             modbus_error_handle(to_rec, WRITE_COIL);
         } catch (exception &e) {
-            cout << e.what() << endl;
             delete (&to_rec);
             delete (&k);
             throw e;
@@ -383,7 +406,6 @@ void modbus::modbus_write_coils(int address, int amount, bool *value) {
         try{
             modbus_error_handle(to_rec, WRITE_COILS);
         } catch (exception &e) {
-            cout << e.what() << endl;
             delete (&to_rec);
             delete (&k);
             throw e;
@@ -412,7 +434,6 @@ void modbus::modbus_write_registers(int address, int amount, uint16_t *value) {
         try{
             modbus_error_handle(to_rec, WRITE_REGS);
         } catch (exception &e) {
-            cout << e.what() << endl;
             delete (&to_rec);
             delete (&k);
             throw e;
@@ -493,8 +514,4 @@ void modbus::modbus_error_handle(uint8_t *msg, int func) {
                 break;
         }
     }
-}
-
-void modbus::resetTimeOut() {
-    _timeout = false;
 }

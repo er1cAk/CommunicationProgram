@@ -4,13 +4,6 @@
 
 #include "Aurora.h"
 
-void printit(uint8_t *response){
-    for (int idx = 0; idx < 8; ++idx) {
-        cout <<"Response[ " << idx << " ]: " << (int)response[idx]<< " >> " << (unsigned char)response[idx] << endl;
-    }
-    cout << endl;
-}
-
 Aurora::Aurora(string HOST, int PORT) {
     this->HOST = HOST;
     this->PORT = PORT;
@@ -20,35 +13,68 @@ Aurora::Aurora() = default;
 
 Aurora::~Aurora() = default;
 
-void Aurora::aurora_connect() {
+size_t Aurora::aurora_connect() {
     if(HOST == "" || PORT == 0) {
-        cout << "Missing Host or Port" << std::endl;
-    } else {
-        cout << "Found Proper Host "<< HOST << " and Port " << PORT <<endl;
+        //maybe i should log it
+        return false;
     }
 
     _socket = socket(AF_INET, SOCK_STREAM, 0);
 
-    if(_socket == -1) {
-        cout <<"Error Opening Socket" <<endl;
-    } else {
-        cout <<"Socket Opened Successfully" << endl;
+    if(_socket < 0) {
+        return false;
     }
 
     _server.sin_family = AF_INET;
     _server.sin_addr.s_addr = inet_addr(HOST.c_str());
     _server.sin_port = htons(PORT);
 
-    if (connect(_socket, (struct sockaddr*)&_server, sizeof(_server)) < 0) {
-        throw AuroraConnectException();
-    } else {
-        _connected = true;
+    long arg;
+    struct timeval tv;
+    int res, valopt;
+    fd_set myset;
+    socklen_t lon;
+
+    // Set non-blocking
+    arg = fcntl(_socket, F_GETFL, NULL);
+    arg |= O_NONBLOCK;
+    fcntl(_socket, F_SETFL, arg);
+
+    res = connect(_socket, (struct sockaddr*)&_server, sizeof(_server));
+    //"solution" connect with timeout
+    if (res < 0) {
+        if (errno == EINPROGRESS) {
+            tv.tv_sec = 2;
+            tv.tv_usec = 0;
+            FD_ZERO(&myset);
+            FD_SET(_socket, &myset);
+            if (select(_socket+1, NULL, &myset, NULL, &tv) > 0) {
+                lon = sizeof(int);
+                getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
+                if (valopt) {
+                    fprintf(stderr, "Error in connection() %d - %s\n", valopt, strerror(valopt));
+                    return false;
+                }
+            }else {
+                fprintf(stderr, "Timeout or error() %d - %s\n", valopt, strerror(valopt));
+                return false;
+            }
+        } else {
+            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
+            return false;
+        }
     }
+    // Set to blocking mode again...
+    arg = fcntl(_socket, F_GETFL, NULL);
+    arg &= (~O_NONBLOCK);
+    fcntl(_socket, F_SETFL, arg);
+
+    _connected = true;
+    return true;
 }
 
 void Aurora::aurora_disconnect() {
     close(_socket);
-    cout << "Socket has been closed." << endl;
 }
 
 ssize_t Aurora::sendRequest(uint8_t address, uint8_t command, uint8_t type, uint8_t global){

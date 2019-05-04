@@ -69,7 +69,7 @@ public:
 
     ~Aurora();
 
-    void aurora_connect();
+    size_t aurora_connect();
     void aurora_disconnect();
     void readState(uint8_t address);
     void readDSP(uint8_t address, uint8_t type, uint8_t global);
