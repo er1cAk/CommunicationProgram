@@ -84,7 +84,7 @@ bool modbus::modbus_connect() {
     //"solution" connect with timeout
     if (res < 0) {
         if (errno == EINPROGRESS) {
-            tv.tv_sec = 2;
+            tv.tv_sec = 3;
             tv.tv_usec = 0;
             FD_ZERO(&myset);
             FD_SET(_socket, &myset);
@@ -92,7 +92,7 @@ bool modbus::modbus_connect() {
                 lon = sizeof(int);
                 getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
                 if (valopt) {
-                    fprintf(stderr, "Error in connection() %d - %s\n", valopt, strerror(valopt));
+                    fprintf(stderr, "Error in connection()modbus %d - %s\n", valopt, strerror(valopt));
                     return false;
                 }
             }else {
@@ -238,7 +238,7 @@ void modbus::modbus_read_holding_registers(int address, int amount, uint16_t *bu
  * @param amount      Amount of Registers to Read
  * @param buffer      Buffer to Store Data Read from Registers
  */
-void modbus::modbus_read_input_registers(int address, int amount, uint16_t *buffer) {
+ssize_t modbus::modbus_read_input_registers(int address, int amount, uint16_t *buffer) {
     if(_connected){
         if(amount > 65535 || address > 65535) {
             throw modbus_amount_exception();
@@ -252,8 +252,10 @@ void modbus::modbus_read_input_registers(int address, int amount, uint16_t *buff
                 if(k > 0 ) {
                     buffer[i] = ((uint16_t) to_rec[9 + 2 * i]) << 8;
                     buffer[i] += (uint16_t) to_rec[10 + 2 * i];
+                    return 1;
                 }else{
                     buffer[i] = '\0';
+                    return -1;
                 }
             }
         } catch (exception &e) {

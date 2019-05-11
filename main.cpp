@@ -17,7 +17,6 @@ using namespace std;
 using namespace libconfig;
 
 void onlyForQuickChanges(sql::Connection *conn);
-//void updatePowerPlantStatus( sql::Connection *conn, int id, int status);
 
 int main() {
     ModbusPowerPlant modbusPowerPlant;
@@ -146,12 +145,3 @@ void onlyForQuickChanges(sql::Connection *conn) {
         ps->executeQuery();
     }
 }
-
-//void updatePowerPlantStatus( sql::Connection *conn, int id, int status){
-//    sql::PreparedStatement *ps;
-//
-//    ps = conn->prepareStatement("UPDATE POWER_PLANTS SET STATUS_ID = ? WHERE PW_ID = ?");
-//    ps->setInt(1,status);
-//    ps->setInt(2,id);
-//    ps->executeQuery();
-//}

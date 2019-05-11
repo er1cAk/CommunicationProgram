@@ -24,7 +24,8 @@ void ModbusPowerPlant::disconnect() {
 
 void ModbusPowerPlant::readInvertorsData() {
     try {
-        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? WHERE STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY ADDRESS DESC");
+        cout<<"PW_IP: " << this->get_ip_address() << endl;
+        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();
@@ -36,10 +37,16 @@ void ModbusPowerPlant::readInvertorsData() {
             try {
                 modbus1.modbus_set_slave_id(_res->getInt("ADDRESS"));
                 int id = _res->getInt("INVERTER_ID");
-                readInstantPower(id, _res->getInt("DIVISOR"));
-                readDcVoltage(id);
-                readAcVoltage(id);
-                readCurrent(id, _res->getInt("DIVISOR"));
+                if(readInstantPower(id, _res->getInt("DIVISOR")) > 0){
+                    readDcVoltage(id);
+                    readAcVoltage(id);
+                    readCurrent(id, _res->getInt("DIVISOR"));
+                }else{
+                    //check alarms
+                    writeDataToDB(id, 0, "INSERT INTO DC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
+                    writeDataToDB(id, 0, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
+                    writeDataToDB(id, 0, "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
+                }
             } catch (modbus_exception &e) {
                 cout << e.what() << endl;
             }
@@ -52,14 +59,18 @@ void ModbusPowerPlant::readInvertorsData() {
 ssize_t ModbusPowerPlant::readInstantPower(int invertor_id, double divisor) {
     uint16_t buffer[1];
     try {
-        modbus1.modbus_read_input_registers(INSTANT_POWER, COUNT_OF_READING_REGISTERS, buffer);
-        double power = (buffer[0] / divisor) * 1000;
-        writeDataToDB(invertor_id, power, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
+        if(modbus1.modbus_read_input_registers(INSTANT_POWER, COUNT_OF_READING_REGISTERS, buffer) == 1){
+            double power = (buffer[0] / divisor) * 1000;
+            writeDataToDB(invertor_id, power, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
+            cout<<"POWER: "<<power<<endl;
+        }else{
+            writeDataToDB(invertor_id, 0, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
+            return -1;
+        }
     } catch (modbus_exception &e){
         cout << e.what() << endl;
-        return -1;
     }
-    return 0;
+    return 1;
 }
 
 int ModbusPowerPlant::readDcVoltage(int invertor_id) {

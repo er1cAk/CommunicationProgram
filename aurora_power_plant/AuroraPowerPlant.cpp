@@ -76,11 +76,6 @@ void AuroraPowerPlant::readGridPower(int id, uint8_t address) {
     }
 }
 
-
-void AuroraPowerPlant::readLastFourAlarms(int id, uint8_t address) {
-
-}
-
 void AuroraPowerPlant::clearInverterData() {
     aurora.dataDsp = {};
 }

@@ -36,6 +36,14 @@ private:
 //    void writeDataToDB(int invertor_id, double value, string query);
 
 public:
+    typedef struct{
+        float Power;
+        int DC;
+        int AC;
+        float Current;
+    }InverterData;
+
+    InverterData inverterData;
 
     ModbusPowerPlant(string _ip_address, int id);
     ModbusPowerPlant();

@@ -87,7 +87,7 @@ public:
     void modbus_read_coils(int address, int amount, bool* buffer);
     void modbus_read_input_bits(int address, int amount, bool* buffer);
     void modbus_read_holding_registers(int address, int amount, uint16_t *buffer);
-    void modbus_read_input_registers(int address, int amount, uint16_t *buffer);
+    ssize_t modbus_read_input_registers(int address, int amount, uint16_t *buffer);
 
     void modbus_write_coil(int address, bool to_write);
     void modbus_write_register(int address, uint16_t value);

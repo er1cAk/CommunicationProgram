@@ -44,7 +44,7 @@ size_t Aurora::aurora_connect() {
     //"solution" connect with timeout
     if (res < 0) {
         if (errno == EINPROGRESS) {
-            tv.tv_sec = 2;
+            tv.tv_sec = 3;
             tv.tv_usec = 0;
             FD_ZERO(&myset);
             FD_SET(_socket, &myset);
