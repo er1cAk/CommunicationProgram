@@ -84,7 +84,7 @@ bool modbus::modbus_connect() {
     //"solution" connect with timeout
     if (res < 0) {
         if (errno == EINPROGRESS) {
-            tv.tv_sec = 3;
+            tv.tv_sec = 2;
             tv.tv_usec = 0;
             FD_ZERO(&myset);
             FD_SET(_socket, &myset);
@@ -92,19 +92,16 @@ bool modbus::modbus_connect() {
                 lon = sizeof(int);
                 getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
                 if (valopt) {
-                    fprintf(stderr, "Error in connection()modbus %d - %s\n", valopt, strerror(valopt));
                     return false;
                 }
             }else {
-                fprintf(stderr, "Timeout or error() %d - %s\n", valopt, strerror(valopt));
                 return false;
             }
         } else {
-            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
             return false;
         }
     }
-    // Set to blocking mode again...
+    // Set to blocking mxode again...
     arg = fcntl(_socket, F_GETFL, NULL);
     arg &= (~O_NONBLOCK);
     fcntl(_socket, F_SETFL, arg);

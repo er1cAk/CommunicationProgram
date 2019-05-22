@@ -36,8 +36,9 @@ protected:
 
     void set_ip_address(const string &_ip_address);
     void set_id(int _id);
-    void writeDataToDB(int invertor_id, double value, string query);
-    void updateInverterStatus(int invertor_id, string query);
+    void writeDataToDB(int inverter_id, double value, string query);
+    void writeAlarmToDB(int inverter_id, uint8_t code, string description);
+    void updateInverterStatus(int inverter_id, int status);
 
 public:
     PowerPlant(string _ip_address, int id);

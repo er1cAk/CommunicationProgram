@@ -44,7 +44,7 @@ size_t Aurora::aurora_connect() {
     //"solution" connect with timeout
     if (res < 0) {
         if (errno == EINPROGRESS) {
-            tv.tv_sec = 3;
+            tv.tv_sec = 2;
             tv.tv_usec = 0;
             FD_ZERO(&myset);
             FD_SET(_socket, &myset);
@@ -52,15 +52,12 @@ size_t Aurora::aurora_connect() {
                 lon = sizeof(int);
                 getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
                 if (valopt) {
-                    fprintf(stderr, "Error in connection() %d - %s\n", valopt, strerror(valopt));
                     return false;
                 }
             }else {
-                fprintf(stderr, "Timeout or error() %d - %s\n", valopt, strerror(valopt));
                 return false;
             }
         } else {
-            fprintf(stderr, "Error connecting %d - %s\n", errno, strerror(errno));
             return false;
         }
     }

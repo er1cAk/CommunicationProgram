@@ -69,13 +69,15 @@ int main() {
                         modbusPowerPlant = ModbusPowerPlant(IP_ADDRESS, PW_ID);
 
                         if(modbusPowerPlant.connect()) {
-                            if(STATUS_ID != STATUS_ONLINE)
+                            if(STATUS_ID != STATUS_ONLINE) {
                                 modbusPowerPlant.updatePowerPlantStatus(STATUS_ONLINE);
+                            }
                             modbusPowerPlant.readInvertorsData();
                             modbusPowerPlant.disconnect();
                         } else {
-                            if(STATUS_ID != STATUS_COMMUNICATION_ERROR)
+                            if (STATUS_ID != STATUS_COMMUNICATION_ERROR) {
                                 modbusPowerPlant.updatePowerPlantStatus(STATUS_COMMUNICATION_ERROR);
+                            }
                             modbusPowerPlant.disconnect();
                         }
                         break;
@@ -84,13 +86,15 @@ int main() {
                         auroraPowerPlant = AuroraPowerPlant(IP_ADDRESS, PW_ID);
 
                         if(auroraPowerPlant.connect()){
-                            if(STATUS_ID != STATUS_ONLINE)
+                            if(STATUS_ID != STATUS_ONLINE) {
                                 auroraPowerPlant.updatePowerPlantStatus(STATUS_ONLINE);
+                            }
                             auroraPowerPlant.readInvertersData();
                             auroraPowerPlant.disconnect();
                         } else {
-                            if(STATUS_ID != STATUS_COMMUNICATION_ERROR)
+                            if(STATUS_ID != STATUS_COMMUNICATION_ERROR) {
                                 auroraPowerPlant.updatePowerPlantStatus(STATUS_COMMUNICATION_ERROR);
+                            }
                             auroraPowerPlant.disconnect();
                         }
                         break;

@@ -15,6 +15,8 @@
 #define GRID_POWER 3
 
 #define STATE_RUNNING 2
+#define STATE_STANDBY 0
+#define STATE_WAIT_SUN 1
 
 #include "../power_plant/PowerPlant.h"
 #include "../aurorapp/Aurora.h"
@@ -26,7 +28,7 @@ private:
     void readGridPower(int id,uint8_t address);
     void readGridVoltage(int id, uint8_t address);
     void readGridCurrent(int id, uint8_t address);
-    void readLastFourAlarms(int id, uint8_t address);
+    string DescriptionAlarmState(uint8_t id);
 
     void clearInverterData();
 

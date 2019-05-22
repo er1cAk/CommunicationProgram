@@ -28,10 +28,10 @@ class ModbusPowerPlant: public PowerPlant{
 private:
     modbus modbus1 = modbus("", 0);
 
-    ssize_t readInstantPower(int invertor_id, double divisor);
-    int readDcVoltage(int invertor_id);
-    int readAcVoltage(int invertor_id);
-    int readCurrent(int invertor_id, double divisor);
+    ssize_t readInstantPower(int inverter_id, double divisor);
+    int readDcVoltage(int inverter_id);
+    int readAcVoltage(int inverter_id);
+    int readCurrent(int inverter_id, double divisor);
 
 //    void writeDataToDB(int invertor_id, double value, string query);
 

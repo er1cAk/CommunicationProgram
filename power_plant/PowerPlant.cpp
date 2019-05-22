@@ -65,10 +65,23 @@ void PowerPlant::writeDataToDB(int invertor_id, double value, string query){
     }
 }
 
-void PowerPlant::updateInverterStatus(int invertor_id, string query){
+void PowerPlant::updateInverterStatus(int inverter_id, int status){
     try {
-        _pstmt = _conn->prepareStatement(query);
-        _pstmt->setInt(1, invertor_id);
+        _pstmt = _conn->prepareStatement("UPDATE INVERTERS SET STATUS_ID = ? WHERE INVERTER_ID = ?");
+        _pstmt->setInt(1, status);
+        _pstmt->setInt(2, inverter_id);
+        _pstmt->executeQuery();
+    } catch (sql::SQLException &e) {
+        cout << e.what() << endl;
+    }
+}
+
+void PowerPlant::writeAlarmToDB(int inverter_id, uint8_t code, string description){
+    try {
+        _pstmt = _conn->prepareStatement("INSERT INTO ALARMS(INVERTER_ID, CODE, DESCRIPTION, SOLVED) VALUE(?,?,?,0)");
+        _pstmt->setInt(1, inverter_id);
+        _pstmt->setInt(2, code);
+        _pstmt->setString(3, description);
         _pstmt->executeQuery();
     } catch (sql::SQLException &e) {
         cout << e.what() << endl;
