@@ -33,6 +33,7 @@ void AuroraPowerPlant::readInvertersData() {
                     readGridPower(id, address);
                     readGridCurrent(id, address);
                 }else{
+//                    cout<<aurora.dataState.InverterState<< aurora.dataState.AlarmState<<endl;
                     if(aurora.dataState.InverterState == STATE_STANDBY || aurora.dataState.GlobalState == STATE_WAIT_SUN){
                         this->updateInverterStatus(id, STATUS_STAND_BY);
                     }
@@ -54,7 +55,7 @@ void AuroraPowerPlant::readGridVoltage(int id, uint8_t address) {
     if(_connectivity){
         aurora.readDSP(address, GRID_VOLTAGE, GLOBAL_TYPE_GLOBAL);
         if(aurora.dataDsp.TransmissionState == 0){
-            writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE) VALUES(?,?)");
+            writeDataToDB(id, aurora.dataDsp.Value, "INSERT INTO DC_VOLTAGE(INVERTER_ID, VALUE) VALUES(?,?)");
             clearInverterData();
         }
     }
