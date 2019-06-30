@@ -172,7 +172,7 @@ string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
 }
 
 string ModbusPowerPlant::DescriptionAlarm1(uint8_t code) {
-    return null
+    return NULL;
 }
 
 string ModbusPowerPlant::DescriptionAlarm2(uint8_t code) {
