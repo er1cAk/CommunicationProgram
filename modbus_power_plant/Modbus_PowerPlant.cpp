@@ -41,10 +41,8 @@ void ModbusPowerPlant::readInvertorsData() {
                         this->updateInverterStatus(id, STATUS_ONLINE);
                     }
                     readDcVoltage(id);
-                    readAcVoltage(id);
                     readCurrent(id, _res->getInt("DIVISOR"));
                 }else{
-                    //check alarms
                     if(status_id != STATUS_COMMUNICATION_ERROR) {
                         this->updateInverterStatus(id, STATUS_COMMUNICATION_ERROR);
                     }
@@ -52,6 +50,7 @@ void ModbusPowerPlant::readInvertorsData() {
                     writeDataToDB(id, 0, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
                     writeDataToDB(id, 0, "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
                 }
+                checkAlarms(id);
             } catch (modbus_exception &e) {
                 cout << e.what() << endl;
             }
@@ -86,15 +85,7 @@ int ModbusPowerPlant::readDcVoltage(int inverter_id) {
         cout << e.what() << endl;
     }
 }
-int ModbusPowerPlant::readAcVoltage(int inverter_id) {
-    uint16_t buffer[1];
-    try {
-        modbus1.modbus_read_input_registers(AC_VOLTAGE, COUNT_OF_READING_REGISTERS, buffer);
-        writeDataToDB(inverter_id, buffer[0], "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
-    } catch (modbus_exception &e){
-        cout << e.what() << endl;
-    }
-}
+
 int ModbusPowerPlant::readCurrent(int inverter_id, double divisor) {
     uint16_t buffer[1];
     try {
@@ -102,5 +93,123 @@ int ModbusPowerPlant::readCurrent(int inverter_id, double divisor) {
         writeDataToDB(inverter_id, ((double)(buffer[0]/divisor)), "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
     } catch (modbus_exception &e){
         cout << e.what() << endl;
+    }
+}
+
+void ModbusPowerPlant::checkAlarms(int inverter_id) {
+    readAlarms(inverter_id);
+//    readAlarms1(inverter_id);
+    readAlarms2(inverter_id);
+}
+
+int ModbusPowerPlant::readAlarms(int inverter_id) {
+    uint16_t buffer[1];
+    modbus1.modbus_read_input_registers(alarms, COUNT_OF_READING_REGISTERS, buffer);
+    for (int i = 16; i > 0; i--) {
+        if ((buffer[0] >> 15) == 1) {
+            writeAlarmToDB(inverter_id, i, DescriptionAlarm(i));
+        }
+    }
+}
+
+int ModbusPowerPlant::readAlarms1(int inverter_id) {
+    uint16_t buffer[1];
+    modbus1.modbus_read_input_registers(alarms1, COUNT_OF_READING_REGISTERS, buffer);
+    for (int i = 16; i > 0; i--) {
+        if ((buffer[0] >> 15) == 1) {
+            writeAlarmToDB(inverter_id, 100 + i, DescriptionAlarm1(i));
+        }
+    }
+}
+
+int ModbusPowerPlant::readAlarms2(int inverter_id) {
+    uint16_t buffer[1];
+    modbus1.modbus_read_input_registers(alarms2, COUNT_OF_READING_REGISTERS, buffer);
+    for (int i = 16; i > 0; i--) {
+        if ((buffer[0] >> 15) == 1) {
+            writeAlarmToDB(inverter_id, 200 + i, DescriptionAlarm2(i));
+        }
+    }
+}
+
+string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
+    switch (code) {
+        case 0:
+            return "Over current";
+        case 1:
+            return "Over voltage on DC bus";
+        case 2:
+            return "Under voltage on DC bus";
+        case 3:
+            return "Reserve";
+        case 4:
+            return "False";
+        case 5:
+            return "Over voltage protection failure";
+        case 6:
+            return "Over voltage protection failure";
+        case 7:
+            return "False";
+        case 8:
+            return "Over temperature warning";
+        case 9:
+            return "System bus error";
+        case 10:
+            return "LCL Fan warning active";
+        case 11:
+            return "Follower in failure";
+        case 12:
+            return "Insulation warning active";
+        case 13:
+            return "M/F switch fault";
+        case 14:
+            return "Frequency limit";
+        case 15:
+            return "Supply voltage limit";
+        default:
+            break;
+    }
+}
+
+string ModbusPowerPlant::DescriptionAlarm1(uint8_t code) {
+    return null
+}
+
+string ModbusPowerPlant::DescriptionAlarm2(uint8_t code) {
+    switch (code) {
+        case 0:
+            return "False";
+        case 1:
+            return "F29 Thermistor warning";
+        case 2:
+            return "False";
+        case 3:
+            return "Supply phase warning";
+        case 4:
+            return "False";
+        case 5:
+            return "Over voltage protection failure";
+        case 6:
+            return "Over voltage protection failure";
+        case 7:
+            return "False";
+        case 8:
+            return "Over temperature warning";
+        case 9:
+            return "System bus error";
+        case 10:
+            return "LCL Fan warning active";
+        case 11:
+            return "Follower in failure";
+        case 12:
+            return "Insulation warning active";
+        case 13:
+            return "M/F switch fault";
+        case 14:
+            return "Frequency limit";
+        case 15:
+            return "Supply voltage limit";
+        default:
+            break;
     }
 }
