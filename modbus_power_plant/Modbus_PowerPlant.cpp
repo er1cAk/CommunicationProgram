@@ -172,7 +172,42 @@ string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
 }
 
 string ModbusPowerPlant::DescriptionAlarm1(uint8_t code) {
-    return NULL;
+    switch (code) {
+        case 0:
+            return "Reserve";
+        case 1:
+            return "Fail in charging circuit";
+        case 2:
+            return "Reserve";
+        case 3:
+            return "Saturation";
+        case 4:
+            return "Inverter HW failure";
+        case 5:
+            return "Failure in application program";
+        case 6:
+            return "External failure";
+        case 7:
+            return "Reserve";
+        case 8:
+            return "Internal communication failure";
+        case 9:
+            return "Overheated of inverter";
+        case 10:
+            return "Reserve";
+        case 11:
+            return "Failure of cooler fan";
+        case 12:
+            return "Application failure";
+        case 13:
+            return "Failure of power part, memory or control unit";
+        case 14:
+            return "State of main switch";
+        case 15:
+            return "Reserve";
+        default:
+            break;
+    }
 }
 
 string ModbusPowerPlant::DescriptionAlarm2(uint8_t code) {
