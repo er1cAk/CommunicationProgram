@@ -78,7 +78,7 @@ void PowerPlant::updateInverterStatus(int inverter_id, int status){
 
 void PowerPlant::writeAlarmToDB(int inverter_id, uint8_t code, string description){
     try {
-        _pstmt = _conn->prepareStatement("INSERT INTO ALARMS(INVERTER_ID, CODE, DESCRIPTION, SOLVED) VALUE(?,?,?,0)");
+        _pstmt = _conn->prepareStatement("INSERT INTO ALARMS(INVERTER_ID, CODE, DESCRIPTION, SOLVED) VALUE(?,?,?,0) ON DUPLICATE KEY UPDATE UPDATE_TIME=NOW()");
         _pstmt->setInt(1, inverter_id);
         _pstmt->setInt(2, code);
         _pstmt->setString(3, description);
