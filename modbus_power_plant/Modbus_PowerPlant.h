@@ -13,7 +13,6 @@
 
 #define alarms 1171
 #define alarms1 1172
-#define alarms2 1173
 
 #define MODBUS_DEFAULT_PORT 502
 
@@ -31,13 +30,9 @@ private:
     int readCurrent(int inverter_id, double divisor);
     int readAlarms(int inverter_id);
     int readAlarms1(int inverter_id);
-    int readAlarms2(int inverter_id);
     void checkAlarms(int inverter_id);
     string DescriptionAlarm(uint8_t code);
     string DescriptionAlarm1(uint8_t code);
-    string DescriptionAlarm2(uint8_t code);
-
-//    void writeDataToDB(int invertor_id, double value, string query);
 
 public:
     typedef struct{

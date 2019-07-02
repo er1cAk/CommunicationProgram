@@ -98,8 +98,7 @@ int ModbusPowerPlant::readCurrent(int inverter_id, double divisor) {
 
 void ModbusPowerPlant::checkAlarms(int inverter_id) {
     readAlarms(inverter_id);
-//    readAlarms1(inverter_id);
-    readAlarms2(inverter_id);
+    readAlarms1(inverter_id);
 }
 
 int ModbusPowerPlant::readAlarms(int inverter_id) {
@@ -122,15 +121,6 @@ int ModbusPowerPlant::readAlarms1(int inverter_id) {
     }
 }
 
-int ModbusPowerPlant::readAlarms2(int inverter_id) {
-    uint16_t buffer[1];
-    modbus1.modbus_read_input_registers(alarms2, COUNT_OF_READING_REGISTERS, buffer);
-    for (int i = 16; i > 0; i--) {
-        if ((buffer[0] >> 15) == 1) {
-            writeAlarmToDB(inverter_id, 200 + i, DescriptionAlarm2(i));
-        }
-    }
-}
 
 string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
     switch (code) {
@@ -140,28 +130,12 @@ string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
             return "Over voltage on DC bus";
         case 2:
             return "Under voltage on DC bus";
-        case 3:
-            return "Reserve";
-        case 4:
-            return "False";
-        case 5:
-            return "Over voltage protection failure";
         case 6:
             return "Over voltage protection failure";
-        case 7:
-            return "False";
         case 8:
-            return "Over temperature warning";
-        case 9:
-            return "System bus error";
+            return "High temperature warning";
         case 10:
-            return "LCL Fan warning active";
-        case 11:
-            return "Follower in failure";
-        case 12:
-            return "Insulation warning active";
-        case 13:
-            return "M/F switch fault";
+            return "Failure on HW card";
         case 14:
             return "Frequency limit";
         case 15:
@@ -173,12 +147,8 @@ string ModbusPowerPlant::DescriptionAlarm(uint8_t code) {
 
 string ModbusPowerPlant::DescriptionAlarm1(uint8_t code) {
     switch (code) {
-        case 0:
-            return "Reserve";
         case 1:
             return "Fail in charging circuit";
-        case 2:
-            return "Reserve";
         case 3:
             return "Saturation";
         case 4:
@@ -187,63 +157,14 @@ string ModbusPowerPlant::DescriptionAlarm1(uint8_t code) {
             return "Failure in application program";
         case 6:
             return "External failure";
-        case 7:
-            return "Reserve";
         case 8:
             return "Internal communication failure";
         case 9:
             return "Overheated of inverter";
-        case 10:
-            return "Reserve";
         case 11:
             return "Failure of cooler fan";
-        case 12:
-            return "Application failure";
         case 13:
             return "Failure of power part, memory or control unit";
-        case 14:
-            return "State of main switch";
-        case 15:
-            return "Reserve";
-        default:
-            break;
-    }
-}
-
-string ModbusPowerPlant::DescriptionAlarm2(uint8_t code) {
-    switch (code) {
-        case 0:
-            return "False";
-        case 1:
-            return "F29 Thermistor warning";
-        case 2:
-            return "False";
-        case 3:
-            return "Supply phase warning";
-        case 4:
-            return "False";
-        case 5:
-            return "Over voltage protection failure";
-        case 6:
-            return "Over voltage protection failure";
-        case 7:
-            return "False";
-        case 8:
-            return "Over temperature warning";
-        case 9:
-            return "System bus error";
-        case 10:
-            return "LCL Fan warning active";
-        case 11:
-            return "Follower in failure";
-        case 12:
-            return "Insulation warning active";
-        case 13:
-            return "M/F switch fault";
-        case 14:
-            return "Frequency limit";
-        case 15:
-            return "Supply voltage limit";
         default:
             break;
     }
