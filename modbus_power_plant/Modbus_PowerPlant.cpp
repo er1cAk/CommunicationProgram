@@ -35,7 +35,7 @@ void ModbusPowerPlant::readInvertorsData() {
             try {
                 modbus1.modbus_set_slave_id(_res->getInt("ADDRESS"));
                 int id = _res->getInt("INVERTER_ID");
-                int status_id = _res->getInt("STATUS_ID");
+                int status_id  = _res->getInt("STATUS_ID");
                 if(readInstantPower(id, _res->getInt("DIVISOR")) > 0){
                     if(status_id != STATUS_ONLINE){
                         this->updateInverterStatus(id, STATUS_ONLINE);
@@ -46,9 +46,6 @@ void ModbusPowerPlant::readInvertorsData() {
                     if(status_id != STATUS_COMMUNICATION_ERROR) {
                         this->updateInverterStatus(id, STATUS_COMMUNICATION_ERROR);
                     }
-                    writeDataToDB(id, 0, "INSERT INTO DC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
-                    writeDataToDB(id, 0, "INSERT INTO AC_VOLTAGE(INVERTER_ID, VALUE ) VALUES(?,?)");
-                    writeDataToDB(id, 0, "INSERT INTO CURRENT(INVERTER_ID, VALUE ) VALUES(?,?)");
                 }
                 checkAlarms(id);
             } catch (modbus_exception &e) {
@@ -65,9 +62,11 @@ ssize_t ModbusPowerPlant::readInstantPower(int inverter_id, double divisor) {
     try {
         if(modbus1.modbus_read_input_registers(INSTANT_POWER, COUNT_OF_READING_REGISTERS, buffer) == 1){
             double power = (buffer[0] / divisor) * 1000;
+            if(power == 0){
+                return -1;
+            }
             writeDataToDB(inverter_id, power, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
         }else{
-            writeDataToDB(inverter_id, 0, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");
             return -1;
         }
     } catch (modbus_exception &e){
