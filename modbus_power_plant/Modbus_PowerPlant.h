@@ -25,7 +25,7 @@ class ModbusPowerPlant: public PowerPlant{
 private:
     modbus modbus1 = modbus("", 0);
 
-    ssize_t readInstantPower(int inverter_id, double divisor);
+    ssize_t readInstantPower(int inverter_id, double divisor, int lastPower);
     int readDcVoltage(int inverter_id);
     int readCurrent(int inverter_id, double divisor);
     int readAlarms(int inverter_id);
@@ -48,7 +48,7 @@ public:
     ModbusPowerPlant();
     bool connect();
     void disconnect();
-    void readInvertorsData();
+    void readInvertersData();
 };
 
 #endif //COMMUNICATIONSERVER_MODBUS_POWER_PLANT_H

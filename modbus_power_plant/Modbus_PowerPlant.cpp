@@ -23,9 +23,9 @@ void ModbusPowerPlant::disconnect() {
     }
 }
 
-void ModbusPowerPlant::readInvertorsData() {
+void ModbusPowerPlant::readInvertersData() {
     try {
-        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY ADDRESS DESC");
+        _pstmt = _conn->prepareStatement("SELECT INVERTER_ID, ADDRESS, STATUS_ID, DIVISOR, POWER FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 AND STATUS_ID != 2 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();
@@ -36,7 +36,7 @@ void ModbusPowerPlant::readInvertorsData() {
                 modbus1.modbus_set_slave_id(_res->getInt("ADDRESS"));
                 int id = _res->getInt("INVERTER_ID");
                 int status_id  = _res->getInt("STATUS_ID");
-                if(readInstantPower(id, _res->getInt("DIVISOR")) > 0){
+                if(readInstantPower(id, _res->getInt("DIVISOR"), _res->getInt("POWER") ) > 0){
                     if(status_id != STATUS_ONLINE){
                         this->updateInverterStatus(id, STATUS_ONLINE);
                     }
@@ -57,12 +57,12 @@ void ModbusPowerPlant::readInvertorsData() {
     }
 }
 
-ssize_t ModbusPowerPlant::readInstantPower(int inverter_id, double divisor) {
+ssize_t ModbusPowerPlant::readInstantPower(int inverter_id, double divisor, int lastPower) {
     uint16_t buffer[1];
     try {
         if(modbus1.modbus_read_input_registers(INSTANT_POWER, COUNT_OF_READING_REGISTERS, buffer) == 1){
             double power = (buffer[0] / divisor) * 1000;
-            if(power == 0){
+            if(power == 0 && lastPower == 0){
                 return -1;
             }
             writeDataToDB(inverter_id, power, "INSERT INTO POWER(INVERTER_ID, VALUE ) VALUES(?,?)");

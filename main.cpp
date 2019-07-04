@@ -72,7 +72,7 @@ int main() {
                             if (STATUS_ID != STATUS_ONLINE) {
                                 modbusPowerPlant.updatePowerPlantStatus(STATUS_ONLINE);
                             }
-                            modbusPowerPlant.readInvertorsData();
+                            modbusPowerPlant.readInvertersData();
                             modbusPowerPlant.disconnect();
                         } else {
                             if (STATUS_ID != STATUS_COMMUNICATION_ERROR) {
