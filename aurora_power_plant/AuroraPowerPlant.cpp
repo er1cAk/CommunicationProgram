@@ -13,7 +13,7 @@ AuroraPowerPlant::AuroraPowerPlant() = default;
 
 void AuroraPowerPlant::readInvertersData() {
     try {
-        _pstmt = _conn->prepareStatement("SELECT * FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 ORDER BY ADDRESS DESC");
+        _pstmt = _conn->prepareStatement("SELECT INVERTER_ID, ADDRESS, STATUS_ID FROM INVERTERS WHERE PW_ID = ? AND STATUS_ID != 3 ORDER BY ADDRESS DESC");
         _pstmt -> setInt(1, this->get_id());
         _pstmt -> executeUpdate();
         _res = _pstmt -> executeQuery();
