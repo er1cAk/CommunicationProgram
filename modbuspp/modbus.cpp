@@ -54,14 +54,20 @@ void modbus::modbus_set_slave_id(int id) {
  * @return   If A Connection Is Successfully Built
  */
 bool modbus::modbus_connect() {
-    if(HOST == "" || PORT == 0) {
+    long arg;
+    struct timeval tv;
+    int res, valopt;
+    fd_set myset;
+    socklen_t lon;
+
+    if (HOST.empty() || PORT == 0) {
         //maybe i should log it
         return false;
     }
 
     _socket = socket(AF_INET, SOCK_STREAM, 0);
 
-    if(_socket < 0) {
+    if (_socket < 0) {
         return false;
     }
 
@@ -69,18 +75,18 @@ bool modbus::modbus_connect() {
     _server.sin_addr.s_addr = inet_addr(HOST.c_str());
     _server.sin_port = htons(PORT);
 
-    long arg;
-    struct timeval tv;
-    int res, valopt;
-    fd_set myset;
-    socklen_t lon;
-
     // Set non-blocking
-    arg = fcntl(_socket, F_GETFL, NULL);
-    arg |= O_NONBLOCK;
-    fcntl(_socket, F_SETFL, arg);
+    if ((arg = fcntl(_socket, F_GETFL, NULL)) < 0) {
+        return false;
+    }
 
-    res = connect(_socket, (struct sockaddr*)&_server, sizeof(_server));
+    arg |= O_NONBLOCK;
+
+    if (fcntl(_socket, F_SETFL, arg) < 0) {
+        return false;
+    }
+
+    res = connect(_socket, (struct sockaddr *) &_server, sizeof(_server));
     //"solution" connect with timeout
     if (res < 0) {
         if (errno == EINPROGRESS) {
@@ -88,13 +94,15 @@ bool modbus::modbus_connect() {
             tv.tv_usec = 0;
             FD_ZERO(&myset);
             FD_SET(_socket, &myset);
-            if (select(_socket+1, NULL, &myset, NULL, &tv) > 0) {
+            if (select(_socket + 1, NULL, &myset, NULL, &tv) > 0) {
                 lon = sizeof(int);
-                getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon);
+                if (getsockopt(_socket, SOL_SOCKET, SO_ERROR, (void *) (&valopt), &lon) < 0) {
+                    return false;
+                }
                 if (valopt) {
                     return false;
                 }
-            }else {
+            } else {
                 return false;
             }
         } else {
@@ -102,12 +110,17 @@ bool modbus::modbus_connect() {
         }
     }
     // Set to blocking mxode again...
-    arg = fcntl(_socket, F_GETFL, NULL);
+    if ((arg = fcntl(_socket, F_GETFL, NULL)) < 0) {
+        return false;
+    }
     arg &= (~O_NONBLOCK);
-    fcntl(_socket, F_SETFL, arg);
+
+    if (fcntl(_socket, F_SETFL, arg) < 0) {
+        return false;
+    }
 
     _connected = true;
-    return true;
+    return _connected;
 }
 
 
