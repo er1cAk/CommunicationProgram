@@ -109,8 +109,8 @@ void ModbusPowerPlant::checkAlarms(int inverter_id) {
 int ModbusPowerPlant::readAlarms(int inverter_id) {
     uint16_t buffer[1];
     modbus1.modbus_read_input_registers(alarms, COUNT_OF_READING_REGISTERS, buffer);
-    for (int i = 16; i > 0; i--) {
-        if ((buffer[0] >> 15) == 1) {
+    for (int i = 0; i < 16; i++) {
+        if ((buffer[0] >> i) == 1) {
             writeAlarmToDB(inverter_id, i, DescriptionAlarm(i));
         }
     }
@@ -119,8 +119,8 @@ int ModbusPowerPlant::readAlarms(int inverter_id) {
 int ModbusPowerPlant::readAlarms1(int inverter_id) {
     uint16_t buffer[1];
     modbus1.modbus_read_input_registers(alarms1, COUNT_OF_READING_REGISTERS, buffer);
-    for (int i = 16; i > 0; i--) {
-        if ((buffer[0] >> 15) == 1) {
+    for (int i = 0; i < 16; i++) {
+        if ((buffer[0] >> i) == 1) {
             writeAlarmToDB(inverter_id, 100 + i, DescriptionAlarm1(i));
         }
     }
