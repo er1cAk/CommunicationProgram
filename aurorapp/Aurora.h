@@ -47,17 +47,17 @@ private:
 
 public:
     typedef struct {
-        int TransmissionState;
-        int GlobalState;
+        uint8_t TransmissionState;
+        uint8_t GlobalState;
         float Value;
         bool ReadState;
     }DataDSP;
 
     typedef  struct {
-        int  TransmissionState;
-        int GlobalState;
-        int InverterState;
-        int AlarmState;
+        uint8_t  TransmissionState;
+        uint8_t GlobalState;
+        uint8_t InverterState;
+        uint8_t AlarmState;
     }DataState;
 
     DataDSP dataDsp;
