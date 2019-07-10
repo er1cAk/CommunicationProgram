@@ -24,7 +24,6 @@ int main() {
     AuroraPowerPlant auroraPowerPlant;
     Config cfg;
 
-
     try {
         cfg.readFile("../config.cfg");
     } catch (const FileIOException &fioex) {
