@@ -38,7 +38,7 @@ void AuroraPowerPlant::readInvertersData() {
                         aurora.dataState.GlobalState == STATE_WAIT_SUN) {
                         this->updateInverterStatus(id, STATUS_STAND_BY);
                     }
-                    if (aurora.dataState.AlarmState > 0) {
+                    if (aurora.dataState.AlarmState > 0 && aurora.dataState.AlarmState < 65) {
                         this->writeAlarmToDB(id, aurora.dataState.AlarmState,
                                              DescriptionAlarmState(aurora.dataState.AlarmState));
                         if (status_id != STATUS_IN_ERROR) {
